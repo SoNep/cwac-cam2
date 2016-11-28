@@ -25,6 +25,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.crypto.SecretKey;
+
 /**
  * Stock activity for taking pictures. Supports the same
  * protocol, in terms of extras and return data, as does
@@ -69,6 +71,15 @@ public class CameraActivity extends AbstractCameraActivity
    */
   public static final String EXTRA_SKIP_ORIENTATION_NORMALIZATION=
     "cwac_cam2_skip_orientation_normalization";
+
+  /**
+   * Extra name for serializable Extra indicating if we should encrypt
+   * image file with secret key.
+   */
+  public static final String EXTRA_SECRET_KEY =
+    "cwac_cam2_secret_key";
+
+
 
   private static final String TAG_CONFIRM=ConfirmationFragment.class.getCanonicalName();
   private static final String[] PERMS={Manifest.permission.CAMERA};
@@ -220,12 +231,14 @@ public class CameraActivity extends AbstractCameraActivity
 
   @Override
   protected CameraFragment buildFragment() {
-    return(CameraFragment.newPictureInstance(getOutputUri(),
+    return(CameraFragment.newPictureInstance(
+        getOutputUri(),
         getIntent().getBooleanExtra(EXTRA_UPDATE_MEDIA_STORE, false),
         getIntent().getIntExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1),
         (ZoomStyle)getIntent().getSerializableExtra(EXTRA_ZOOM_STYLE),
         getIntent().getBooleanExtra(EXTRA_FACING_EXACT_MATCH, false),
-        getIntent().getBooleanExtra(EXTRA_SKIP_ORIENTATION_NORMALIZATION, false)));
+        getIntent().getBooleanExtra(EXTRA_SKIP_ORIENTATION_NORMALIZATION, false),
+        (SecretKey) getIntent().getSerializableExtra(EXTRA_SECRET_KEY)));
   }
 
   private void removeFragments() {
@@ -294,6 +307,19 @@ public class CameraActivity extends AbstractCameraActivity
 
     public IntentBuilder debugSavePreviewFrame() {
       result.putExtra(EXTRA_DEBUG_SAVE_PREVIEW_FRAME, true);
+
+      return(this);
+    }
+
+    /**
+     * Indicates secret key to encrypt the picture's file.
+     * Defaults don't encrypt
+     *
+     * @param secretKey secretKey to which to encrypt the picture
+     * @return the builder, for further configuration
+     */
+    public IntentBuilder encryptFile(SecretKey secretKey) {
+      result.putExtra(EXTRA_SECRET_KEY, secretKey);
 
       return(this);
     }

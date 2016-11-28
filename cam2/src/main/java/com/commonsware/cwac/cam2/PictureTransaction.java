@@ -17,8 +17,10 @@ package com.commonsware.cwac.cam2;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import java.io.File;
+
 import java.util.ArrayList;
+
+import javax.crypto.SecretKey;
 
 /**
  * Class encapsulating the information needed to take a picture
@@ -102,7 +104,8 @@ public class PictureTransaction {
      */
     public Builder toUri(Context ctxt, Uri output,
                          boolean updateMediaStore,
-                         boolean skipOrientationNormalization) {
+                         boolean skipOrientationNormalization,
+                         SecretKey secretKey) {
       JPEGWriter jpeg=(JPEGWriter)result.findProcessorByTag(JPEGWriter.class.getCanonicalName());
 
       if (jpeg == null) {
@@ -120,6 +123,7 @@ public class PictureTransaction {
         .getProperties()
         .putBoolean(JPEGWriter.PROP_SKIP_ORIENTATION_NORMALIZATION,
           skipOrientationNormalization);
+      result.getProperties().putSerializable(JPEGWriter.PROP_SECRET_KEY, secretKey);
 
       return (this);
     }

@@ -48,6 +48,8 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.io.File;
 import java.util.LinkedList;
 
+import javax.crypto.SecretKey;
+
 /**
  * Fragment for displaying a camera preview, with hooks to allow
  * you (or the user) to take a picture.
@@ -66,6 +68,7 @@ public class CameraFragment extends Fragment {
   private static final String ARG_FACING_EXACT_MATCH=
     "facingExactMatch";
   private static final String ARG_CHRONOTYPE="chronotype";
+  private static final String ARG_SECRET_KEY = "secretKey";
   private static final int PINCH_ZOOM_DELTA=20;
   private CameraController ctlr;
   private ViewGroup previewStack;
@@ -85,7 +88,8 @@ public class CameraFragment extends Fragment {
                                                   int quality,
                                                   ZoomStyle zoomStyle,
                                                   boolean facingExactMatch,
-                                                  boolean skipOrientationNormalization) {
+                                                  boolean skipOrientationNormalization,
+                                                  SecretKey secretKey) {
     CameraFragment f=new CameraFragment();
     Bundle args=new Bundle();
 
@@ -97,6 +101,8 @@ public class CameraFragment extends Fragment {
     args.putBoolean(ARG_IS_VIDEO, false);
     args.putSerializable(ARG_ZOOM_STYLE, zoomStyle);
     args.putBoolean(ARG_FACING_EXACT_MATCH, facingExactMatch);
+    args.putSerializable(ARG_SECRET_KEY, secretKey);
+
     f.setArguments(args);
 
     return (f);
@@ -464,8 +470,8 @@ public class CameraFragment extends Fragment {
     if (output!=null) {
       b.toUri(getActivity(), output,
         getArguments().getBoolean(ARG_UPDATE_MEDIA_STORE, false),
-        getArguments().getBoolean(ARG_SKIP_ORIENTATION_NORMALIZATION,
-          false));
+        getArguments().getBoolean(ARG_SKIP_ORIENTATION_NORMALIZATION, false),
+        (SecretKey) getArguments().getSerializable(ARG_SECRET_KEY));
     }
 
     fabPicture.setEnabled(false);

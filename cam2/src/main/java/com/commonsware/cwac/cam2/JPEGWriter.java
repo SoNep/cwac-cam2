@@ -17,9 +17,20 @@ package com.commonsware.cwac.cam2;
 import android.content.Context;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.util.Base64;
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 /**
  * ImageProcessor that writes a JPEG file out to some form
@@ -51,6 +62,15 @@ public class JPEGWriter extends AbstractImageProcessor {
     ="skipOrientationNormalization";
 
   /**
+   * Property key for serializable Extra indicating if we should encrypt the
+   * image file with secret key
+   */
+  public static final String PROP_SECRET_KEY = "secretKey";
+
+  private static final String TAG = "AesEncryption";
+
+
+  /**
    * {@inheritDoc}
    */
   public JPEGWriter(Context ctxt) {
@@ -77,6 +97,9 @@ public class JPEGWriter extends AbstractImageProcessor {
       .getProperties()
       .getBoolean(PROP_SKIP_ORIENTATION_NORMALIZATION, false));
 
+    if (xact.getProperties().getSerializable(PROP_SECRET_KEY) != null) {
+        jpeg = encryptToByte((SecretKey) xact.getProperties().getSerializable(PROP_SECRET_KEY),jpeg);
+    }
     if (output!=null) {
       try {
         if (output.getScheme().equals("file")) {
@@ -111,5 +134,26 @@ public class JPEGWriter extends AbstractImageProcessor {
         AbstractCameraActivity.BUS.post(new CameraEngine.DeepImpactEvent(e));
       }
     }
+  }
+
+  private static byte[] encryptToByte(SecretKey secretKey, byte[] byteToEncrypt) {
+    byte[] encrypted = null;
+    try {
+      Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
+
+      cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+      encrypted = Base64.encode(cipher.doFinal(byteToEncrypt), Base64.DEFAULT);
+    } catch (NoSuchAlgorithmException e) {
+      Log.e(TAG, "Fall to encrypt NoSuchAlgorithmException", e);
+    } catch (NoSuchPaddingException e) {
+      Log.e(TAG, "Fall to encrypt NoSuchPaddingException", e);
+    } catch (InvalidKeyException e) {
+      Log.e(TAG, "Fall to encrypt InvalidKeyException", e);
+    } catch (BadPaddingException e) {
+      Log.e(TAG, "Fall to encrypt BadPaddingException", e);
+    } catch (IllegalBlockSizeException e) {
+      Log.e(TAG, "Fall to encrypt IllegalBlockSizeException", e);
+    }
+    return encrypted;
   }
 }
